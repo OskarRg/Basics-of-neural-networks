@@ -33,6 +33,7 @@ def init_weights(S, *K):
         # print('i ', i, weights[0])
     return weights
 
+
 def sim2(W1, W2, X):
     # calculates output of a two-layer net for a given input
     # parameters: W1 – weight matrix for layer 1
@@ -53,6 +54,7 @@ def sim2(W1, W2, X):
 
 
 
+
 def train2(W1before, W2before, P, T, n):
     noExamples = P.shape[1]
     W1 = W1before.copy()
@@ -64,7 +66,7 @@ def train2(W1before, W2before, P, T, n):
         exampleNo = np.random.randint(1, noExamples + 1)  # draw a random example number
         X = P[:, exampleNo - 1]  # present the chosen example and calculate output
         X1 = np.insert(X, 0, -1)
-        Y1, Y2 = sim(W1, W2, X)
+        Y1, Y2 = sim2(W1, W2, X)
         X2 = np.insert(Y1, 0, -1)
         D2 = T[exampleNo - 1] - Y2
         #  D2 = T[:, exampleNo - 1] - Y2  # calculate errors for layer 2

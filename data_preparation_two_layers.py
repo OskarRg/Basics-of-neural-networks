@@ -1,0 +1,1 @@
+# Tutaj będą dane robione, ale dla 2 warstwowej sieci, więc pewnie mniej niż 14 wejść użyjemy np 4, 5.
