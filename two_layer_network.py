@@ -1,6 +1,6 @@
 import numpy as np
 from functions import sigmoid, init2, sim2, train2
-
+from data_preparation_two_layers import T_5 as T, P_5 as P
 
 
 '''  # To są uogólnione funkcje, działają poprawnie, ale używam na razie tych specialnie do 2 warstw.
@@ -43,54 +43,38 @@ def sim(X, W):
 
 if __name__ == '__main__':
     n = 5000
+
     P = np.array([[0, 0, 1, 1],
                   [0, 1, 0, 1]])
     T = np.array([0, 1, 1, 0])
+
     Y_before_list = []
+    Y_after_list = []
     #W1before, W2before = init2(2, 3, 1)
     W1before, W2before = init2(2, 3, 1)
     W = init2(2, 3, 1)
 
+    print("W1 size =", len(W[0]))
+    print("W2 size =", len(W[1]))
     for column in range(P.shape[1]):
         Y2 = sim2(W[0], W[1], P[:, column])
-        Y_before_list.append(Y2[0])
+        Y_before_list.append(Y2[1])
     print("Y_before_list")
     print(Y_before_list)
 
-    print("W1 ", len(W[0]))
-    print("W2 ", len(W[1]))
-
+    W_after = [0, 0]
     W1after, W2after = train2(W[0], W[1], P, T, n)
+    W_after[0], W_after[1] = train2(W[0], W[1], P, T, n)
     Y1, Y2a = sim2(W1after, W2after, P[:, 0])
     Y1, Y2b = sim2(W1after, W2after, P[:, 1])
     Y1, Y2c = sim2(W1after, W2after, P[:, 2])
     Y1, Y2d = sim2(W1after, W2after, P[:, 3])
     Yafter = [Y2a, Y2b, Y2c, Y2d]
-    print(Yafter)
+    for column in range(P.shape[1]):
+        Y2 = sim2(W_after[0], W_after[1], P[:, column])
+        Y_after_list.append(Y2[1])
 
     for i in range(P.shape[1]):
         X = P[:, i]
         Y1, Y2 = sim2(W1after, W2after, X)
-        print(f"Input: {X}, Predicted Output: {Y2}")
-
-
-    W1before, W2before = W[0], W[1]
-    Y1, Y2a = sim2(W1before, W2before, P[:, 0])
-
-    Y1, Y2b = sim2(W1before, W2before, P[:, 1])
-    Y1, Y2c = sim2(W1before, W2before, P[:, 2])
-    Y1, Y2d = sim2(W1before, W2before, P[:, 3])
-    Ybefore = [Y2a, Y2b, Y2c, Y2d]
-    W1after, W2after = train2(W1before, W2before, P, T, n)
-    Y1, Y2a = sim2(W1after, W2after, P[:, 0])
-    Y1, Y2b = sim2(W1after, W2after, P[:, 1])
-    Y1, Y2c = sim2(W1after, W2after, P[:, 2])
-    Y1, Y2d = sim2(W1after, W2after, P[:, 3])
-    Yafter = [Y2a, Y2b, Y2c, Y2d]
-    print(Yafter)
-'''
-    for i in range(P.shape[1]):
-        X = P[:, i]
-        Y1, Y2 = sim2(W1after, W2after, X)
-        print(f"Input: {X}, Predicted Output: {Y2}")
-'''
+        print(f"Input: {X}, Predicted Output: {Y_after_list[i]}")
