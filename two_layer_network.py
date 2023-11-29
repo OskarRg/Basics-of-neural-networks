@@ -1,9 +1,10 @@
 import numpy as np
 from functions import sigmoid, init2, sim2, train2
-from data_preparation_two_layers import T_5 as T, P_5 as P
+from data_preparation_two_layers import y as T, X as P
 
 
-'''  # To są uogólnione funkcje, działają poprawnie, ale używam na razie tych specialnie do 2 warstw.
+''' 
+# To są uogólnione funkcje, działają poprawnie, ale używam na razie tych specialnie do 2 warstw.
 def init_weights(S, *K):
     # funkcja tworzy sieć wielowarstwową
     # i wypełnia jej macierze wag wartościami losowymi
@@ -43,15 +44,15 @@ def sim(X, W):
 
 if __name__ == '__main__':
     n = 5000
-
-    P = np.array([[0, 0, 1, 1],
-                  [0, 1, 0, 1]])
-    T = np.array([0, 1, 1, 0])
-
+    '''  
+    # To przykład z otyłością, też działa taki malutki
+    P = np.array([[0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1],
+                  [.55, .5, .65, .50, .75, .75, 0.9, .70, .72, .68, 0.74, 1.20]])
+    T = np.array([0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1])
+    '''
     Y_before_list = []
     Y_after_list = []
     #W1before, W2before = init2(2, 3, 1)
-    W1before, W2before = init2(2, 3, 1)
     W = init2(2, 3, 1)
 
     print("W1 size =", len(W[0]))
@@ -59,8 +60,6 @@ if __name__ == '__main__':
     for column in range(P.shape[1]):
         Y2 = sim2(W[0], W[1], P[:, column])
         Y_before_list.append(Y2[1])
-    print("Y_before_list")
-    print(Y_before_list)
 
     W_after = [0, 0]
     W1after, W2after = train2(W[0], W[1], P, T, n)
@@ -76,5 +75,6 @@ if __name__ == '__main__':
 
     for i in range(P.shape[1]):
         X = P[:, i]
+        R = T[i]
         Y1, Y2 = sim2(W1after, W2after, X)
-        print(f"Input: {X}, Predicted Output: {Y_after_list[i]}")
+        print(f"Input: {X}, Predicted Output: {Y2}, Real Output {R}")

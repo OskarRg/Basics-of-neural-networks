@@ -1,46 +1,39 @@
-# Tutaj będą dane robione, ale dla 2 warstwowej sieci, więc pewnie mniej niż 14 wejść użyjemy np 4, 5.
-import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+import numpy as np
+from scipy.stats import chi2_contingency
 
-from ucimlrepo import fetch_ucirepo
+# Wczytujemy plik csv do obiektu DataFrame
+df = pd.read_csv("Salary.csv", sep=',')
 
-# fetch dataset
-heart_disease = fetch_ucirepo(id=45)
+# Usuwamy wiersze z brakującymi danymi
+df = df.dropna()
+print(df)
+y = df["Salary"]
+X = df[["Education Level", "Years of Experience"]]
+y = y.values
+X = X.values
+X = X.T
+# To jest skalowanie na wart od 0-1 ale nie jest potrzebne
+#X = (X - np.min(X)) / (np.max(X) - np.min(X))
+#y = (y - np.min(y)) / (np.max(y) - np.min(y))
+y = np.where(y >= 55000, 1, 0)
+# Sprawdzać będziemy, czy pracownik zarabia więcej niż 55k$
+print("Kształt y:", y.shape)
+print("Kształt X:", X.shape)
 
-# data (as pandas dataframes)
-selected_features = ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal']
-X = heart_disease.data.features[selected_features]
-y = heart_disease.data.targets
+''' 
+# Tym można patrzeć na korelacje, fajne można popatrzeć jak bardzo wyjście zależy od wejścia.
+# Obliczamy wartości chi-kwadrat i p-wartości dla każdej kolumny X i y
+# Używamy funkcji chi2_contingency z biblioteki scipy, która automatycznie tworzy tabelę kontyngencji i oblicza statystykę testu
+# Używamy metody transpose, aby zamienić kolumny na wiersze
+chi2s = []
+pvals = []
+for col in X.transpose():
+    chi2, pval, _, _ = chi2_contingency(np.c_[col, y])
+    chi2s.append(chi2)
+    pvals.append(pval)
 
-# Połącz X i y w jedną ramkę danych
-data = pd.concat([X, y], axis=1)
-
-# Usuń wiersze zawierające NaN
-data_cleaned = data.dropna()
-
-# Wybierz 5 najważniejszych cech
-selected_features_5 = ['age', 'restecg', 'trestbps', 'chol', 'fbs']
-
-selected_features_5 = ['chol', 'fbs']
-
-# Utwórz DataFrame z wybranymi cechami i zmienną docelową
-data_5 = data_cleaned[selected_features_5 + ['num']]
-
-# Przekształć DataFrame do macierzy numpy
-X_5 = data_5[selected_features_5].values
-y_5 = data_5['num'].values.flatten()
-
-# Zamień kategorie 'num' na 0 i 1
-y_binary_5 = np.where(y_5 > 0, 1, 0)
-
-# Transponuj macierz cech, aby pasowała do twojego pierwotnego podejścia
-P_5 = X_5.T
-
-# Utwórz wektor targetów T
-T_5 = y_binary_5
-print("T")
-print(T_5)
-print("P")
-print(P_5)
-print(P_5.shape)
+# Wyświetlamy wartości chi-kwadrat i p-wartości
+print("Wartości chi-kwadrat i p-wartości dla każdej kolumny X i y:")
+for i, (chi2, pval) in enumerate(zip(chi2s, pvals)):
+    print(f"Kolumna {i}: chi-kwadrat = {chi2:.2f}, p-wartość = {pval:.2f}")'''

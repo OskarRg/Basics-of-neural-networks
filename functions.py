@@ -5,6 +5,10 @@ def sigmoid(x, beta=1):
     return 1 / (1 + np.exp(-beta * x))
 
 
+def relu(x):  # Nw czy dobrze - psrawdze kiedyś
+    return np.maximum(0, x)
+
+
 def init2(S, K1, K2):
     # funkcja tworzy sieć jednowarstwową
     # i wypełnia jej macierz wag wartościami losowymi
@@ -44,10 +48,12 @@ def sim2(W1, W2, X):
     beta = 5
     X1 = np.insert(X, 0, -1)
     U1 = np.dot(W1.T, X1)
-    Y1 = 1 / (1 + np.exp(-beta * U1))
+    Y1 = 1 / (1 + np.exp(-beta * U1)) # My chyba tutaj powinniśmy kulturalnie używać sigmoid
+    # Y1 = relu(U1)
     X2 = np.insert(Y1, 0, -1)
     U2 = np.dot(W2.T, X2)
     Y2 = 1 / (1 + np.exp(-beta * U2))
+    # Y2 = relu(U2)
     return Y1, Y2
 
 
