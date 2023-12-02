@@ -1,49 +1,40 @@
 import numpy as np
-from functions import sigmoid, init2, sim2, train2
+import matplotlib.pyplot as plt
+from functions import sigmoid, init2, sim2, train2_with_plots as train2
 from data_preparation_two_layers import y as T, X as P
 
+# TODO Zrobić wykresy MSE - wag - nw jak
+# TODO Adaptacyjny Współczynnik Uczenia - co ot znaczy?
+# TODO Momentum
+# TODO Zminny rozmiar kroku uczenia
+# TODO Wykres błędu klasyfikacji
+# TODO Opcja szybszego kończenia uczenia - po porstu jeden if mądrze umieszczony(?)
+# TODO Opisz problemu, danych uczących, Obserwacje.
+# TODO Zpytać czy próg klasyfikacji 0.5 oznacza, że tylko wystarczy co 2 dobrze dopasować?
+def plot_everything():
+    plt.figure()
+    plt.plot(MSE1_list, label='MSE na przykładach uczących')
+    plt.xlabel('Numer iteracji')
+    plt.ylabel('Błąd MSE')
+    plt.title('Błąd MSE dla warstwy 1')
+    plt.legend()
+    plt.show()
 
-''' 
-# To są uogólnione funkcje, działają poprawnie, ale używam na razie tych specialnie do 2 warstw.
-def init_weights(S, *K):
-    # funkcja tworzy sieć wielowarstwową
-    # i wypełnia jej macierze wag wartościami losowymi
-    # z zakresu od -0.1 do 0.1
-    # parametry: S - liczba wejść do sieci
-    # *K - liczba neuronów w każdej warstwie (można przekazać dowolną ilość argumentów)
-    # wynik: lista macierzy wag sieci
-    num_layers = len(K)
-    weights = [np.random.uniform(-0.1, 0.1, (S + 1, K[0]))]
-
-    for i in range( num_layers - 1):
-        W = np.random.uniform(-0.1, 0.1, (K[i] + 1, K[i + 1]))
-        weights.append(W)
-        # print('i ', i, weights[0])
-    return weights
-
-
-def sim(X, W):
-    # calculates output of a multi-layer net for a given input
-    # parameters: X – input vector to the net / layer 1
-    # *W – list of weight matrices for each layer
-    # result: Y – output vector for the final layer / the net
-
-    beta = 5
-    input_vector = X.copy()
-    # input_vector = np.insert(X, 0, -1)
-    for i, weights in enumerate(W):
-
-        input_vector = np.insert(input_vector, 0, -1)
-        net_input = np.dot(weights.T, input_vector)
-        output_vector = 1 / (1 + np.exp(-beta * net_input))
-        input_vector = output_vector
-
-    return output_vector
-'''
+    # rysowanie wykresów błędu MSE dla warstwy 2
+    plt.figure()
+    plt.plot(MSE2_list, label='MSE na przykładach uczących')
+    plt.plot(MSE2_total, label='MSE na całym zbiorze uczącym')
+    plt.xlabel('Numer iteracji')
+    plt.ylabel('Błąd MSE')
+    plt.title('Błąd MSE dla warstwy 2')
+    plt.legend()
+    plt.show()
 
 
 if __name__ == '__main__':
-    n = 5000
+    n = 1000
+    e = 0.1  # error
+    MSE1_list, MSE2_list, MSE1_total, MSE2_total = [[],[],[],[]]
     '''  
     # To przykład z otyłością, też działa taki malutki
     P = np.array([[0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1],
@@ -53,7 +44,7 @@ if __name__ == '__main__':
     Y_before_list = []
     Y_after_list = []
     #W1before, W2before = init2(2, 3, 1)
-    W = init2(2, 3, 1)
+    W = init2(3, 5, 1)  # Duża liczba chyba pozwala uniknąć najgorszych przypadków, ale nie pomaga jakoś bardzo
 
     print("W1 size =", len(W[0]))
     print("W2 size =", len(W[1]))
@@ -62,19 +53,34 @@ if __name__ == '__main__':
         Y_before_list.append(Y2[1])
 
     W_after = [0, 0]
-    W1after, W2after = train2(W[0], W[1], P, T, n)
-    W_after[0], W_after[1] = train2(W[0], W[1], P, T, n)
-    Y1, Y2a = sim2(W1after, W2after, P[:, 0])
-    Y1, Y2b = sim2(W1after, W2after, P[:, 1])
-    Y1, Y2c = sim2(W1after, W2after, P[:, 2])
-    Y1, Y2d = sim2(W1after, W2after, P[:, 3])
-    Yafter = [Y2a, Y2b, Y2c, Y2d]
+    # W_after[0], W_after[1] = train2(W[0], W[1], P, T, n)
+    W_after[0], W_after[1], MSE1_list, MSE2_list, MSE1_total, MSE2_total = train2(W[0], W[1], P, T, n)
     for column in range(P.shape[1]):
         Y2 = sim2(W_after[0], W_after[1], P[:, column])
         Y_after_list.append(Y2[1])
 
+    plot_everything()
+
+
+    ninety = []
+    bad_output = 0
+    good_output = 0
+
     for i in range(P.shape[1]):
         X = P[:, i]
         R = T[i]
-        Y1, Y2 = sim2(W1after, W2after, X)
-        print(f"Input: {X}, Predicted Output: {Y2}, Real Output {R}")
+        Y1, Y2 = sim2(W_after[0], W_after[1], X)
+
+        ninety.append( 1 if Y2 > 0.9 else 0)
+        if ninety[i] != R:
+            bad_output += 1
+            print("Jest źle: ")
+            print(f"Input: {X}, Predicted Output: {Y2}, Real Output {R}")
+        else:
+            good_output += 1
+
+    print("Bad: ", bad_output)
+    print("Good: ", good_output)
+    print("It went good {}% of the time".format(int(good_output/(good_output+bad_output)*100)))
+
+

@@ -9,10 +9,15 @@ df = pd.read_csv("Salary.csv", sep=',')
 df = df.dropna()
 print(df)
 y = df["Salary"]
-X = df[["Education Level", "Years of Experience"]]
+X = df[["Education Level", "Years of Experience", "Country"]]
+
+dick = {}
+num = 1
+X.Country = X.Country.map( { "USA": 1, "UK": 2, "Canada": 3, "Australia":4, "China": 5, } )
 y = y.values
 X = X.values
 X = X.T
+
 # To jest skalowanie na wart od 0-1 ale nie jest potrzebne
 #X = (X - np.min(X)) / (np.max(X) - np.min(X))
 #y = (y - np.min(y)) / (np.max(y) - np.min(y))

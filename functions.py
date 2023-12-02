@@ -57,10 +57,6 @@ def sim2(W1, W2, X):
     return Y1, Y2
 
 
-
-
-
-
 def train2(W1before, W2before, P, T, n):
     noExamples = P.shape[1]
     W1 = W1before.copy()
@@ -90,6 +86,61 @@ def train2(W1before, W2before, P, T, n):
     W2after = W2
 
     return W1after, W2after
+
+def train2_with_plots(W1before, W2before, P, T, n):
+    noExamples = P.shape[1]
+    W1 = W1before.copy()
+    W2 = W2before.copy()
+    lr = 0.1
+    beta = 5
+
+    # listy do przechowywania błędów MSE
+    MSE1_list = []
+    MSE2_list = []
+    MSE1_total = []
+    MSE2_total = []
+    Y1_all, Y2_all = [], []
+
+    for i in range(n):
+        exampleNo = np.random.randint(1, noExamples + 1)  # draw a random example number
+        X = P[:, exampleNo - 1]  # present the chosen example and calculate output
+        X1 = np.insert(X, 0, -1)
+        Y1, Y2 = sim2(W1, W2, X)
+        X2 = np.insert(Y1, 0, -1)
+        D2 = T[exampleNo - 1] - Y2
+        #  D2 = T[:, exampleNo - 1] - Y2  # calculate errors for layer 2
+        E2 = beta * D2 * Y2 * (1 - Y2)  # "internal" error for layer 2
+        D1 = np.dot(W2[1:, :], E2)  # calculate errors for layer 1 (backpropagation)
+        E1 = beta * D1 * Y1 * (1 - Y1)  # "internal" error for layer 1
+
+        dW1 = lr * np.outer(X1, E1)  # calculate weight adjustments for layers 1 & 2
+        dW2 = lr * np.outer(X2, E2)
+
+        W1 += dW1  # add adjustments to weights in both layers
+        W2 += dW2
+
+        # obliczanie błędów MSE dla obu warstw
+        MSE1 = np.mean((D1 - Y1)**2)
+        MSE2 = np.mean((D2 - Y2)**2)
+        # dodawanie błędów do list
+        MSE1_list.append(MSE1)
+        MSE2_list.append(MSE2)
+        '''
+        # obliczanie błędów MSE dla całego zbioru uczącego
+        for column in range(P.shape[1]):
+            Y1, Y2 = sim2(W1, W2, P[:, column])
+            Y1_all.append(Y1)
+            Y2_all.append(Y2)
+
+        MSE2_all = np.mean((T - Y2_all)**2)
+        # dodawanie błędów do list
+        MSE2_total.append(MSE2_all)
+        '''
+    W1after = W1
+    W2after = W2
+
+    return W1after, W2after, MSE1_list, MSE2_list, MSE1_total, MSE2_total
+
 
 def sim(X, W):
     # calculates output of a multi-layer net for a given input
