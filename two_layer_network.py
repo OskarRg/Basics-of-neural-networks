@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from functions import sigmoid, init2, sim2, train2_with_plots as train2, train2_with_CE as trainCE, train3 as train3_with_CE
+from functions import sigmoid, init2, sim2, train2, train2_with_CE as trainCE, train3 as train3_with_CE
 from data_preparation_two_layers import y as T, X as P
 
 # TODO Zrobić wykresy MSE - wag - już wiem jak - raczej proste ❌
@@ -50,30 +50,34 @@ def plot_CE():
     plt.show()
 
 
-def plot_weights():
-    # rysowanie wykresów wag dla warstwy 1
+def plot_weights(W1_list, W2_list):
+    # Rysowanie wykresów wag dla warstwy 1
     plt.figure()
-    # iterujemy po każdym wierszu macierzy W1 i rysujemy wykres wartości wag dla tego wiersza
-    plt.plot(W1_list, label=f'Wagi dla wiersza macierzy W1')
+    W1_values = np.array([W[:, 0] for W in W1_list])
+    for i in range(W1_values.shape[1]):
+        plt.plot(W1_values[:, i], label=f'Waga dla warstwy 1, neuron {i + 1}')
+
     plt.xlabel('Numer iteracji')
-    plt.ylabel('Wartości wag')
+    plt.ylabel('Wartość wagi')
     plt.title('Wykresy wag dla warstwy 1')
     plt.legend()
     plt.show()
 
-    # rysowanie wykresów wag dla warstwy 2
+    # Rysowanie wykresów wag dla warstwy 2
     plt.figure()
-    # iterujemy po każdym wierszu macierzy W2 i rysujemy wykres wartości wag dla tego wiersza
-    plt.plot(W2_list, label=f'Wagi dla wiersza macierzy W2')
+    W2_values = np.array([W[:, 0] for W in W2_list])
+    for i in range(W2_values.shape[1]):
+        plt.plot(W2_values[:, i], label=f'Waga dla warstwy 2, neuron {i + 1}')
+
     plt.xlabel('Numer iteracji')
-    plt.ylabel('Wartości wag')
+    plt.ylabel('Wartość wagi')
     plt.title('Wykresy wag dla warstwy 2')
     plt.legend()
     plt.show()
 
 
 if __name__ == '__main__':
-    n = 100
+    n = 10000
     e = 0.05  # error ten do tego wcześniejszego kończenia, nie wiem jaki nam wystarczy
     MSE1_list, MSE2_list, MSE2_total = [[], [], []]
     '''
@@ -86,7 +90,7 @@ if __name__ == '__main__':
     Y_before_list = []
     Y_after_list = []
     #W1before, W2before = init2(2, 3, 1)
-    W = init2(4, 6, 1)  # Duża liczba chyba pozwala uniknąć najgorszych przypadków, ale nie pomaga jakoś bardzo
+    W = init2(4, 5, 3)  # Duża liczba chyba pozwala uniknąć najgorszych przypadków, ale nie pomaga jakoś bardzo
 
     print("W1 size =", len(W[0]))
     print("W2 size =", len(W[1]))
@@ -97,14 +101,14 @@ if __name__ == '__main__':
     W_after = [0, 0]
     # W_after[0], W_after[1] = train2(W[0], W[1], P, T, n)
     # W_after[0], W_after[1], MSE1_list, MSE2_list, MSE1_total, MSE2_total = train2(W[0], W[1], P, T, n)
-    W_after[0], W_after[1], CE_error, W1_list, W2_list = trainCE(W[0], W[1], P, T, n)
+    W_after[0], W_after[1], CE_error, W1_list, W2_list = train3_with_CE(W[0], W[1], P, T, n)
 
     for column in range(P.shape[1]):
         Y2 = sim2(W_after[0], W_after[1], P[:, column])
         Y_after_list.append(Y2[1])
 
     plot_CE()
-    plot_weights()
+    plot_weights(W1_list, W2_list)
 
     ninety = []
     bad_output = 0
@@ -115,16 +119,18 @@ if __name__ == '__main__':
         R = T[i]
         Y1, Y2 = sim2(W_after[0], W_after[1], X)
 
-        ninety.append( 1 if Y2 > 0.5 else 0)
-        if ninety[i] != R:
+        predicted_class = np.argmax(Y2)  # zakładamy, że klasa to indeks neuronu o najwyższym wyjściu
+        true_class = np.argmax(R)
+
+        ninety.append(predicted_class)
+        if predicted_class != true_class:
             bad_output += 1
             print("Jest źle: ")
-            print(f"Input: {X}, Predicted Output: {Y2}, Real Output {R}")
+            print(f"Input: {X}, Predicted Output: {predicted_class}, Real Output {true_class}")
         else:
             good_output += 1
 
     print("Bad: ", bad_output)
     print("Good: ", good_output)
-    print("It went good {}% of the time".format(int(good_output/(good_output+bad_output)*100)))
-
+    print("It went good {}% of the time".format(int(good_output / (good_output + bad_output) * 100)))
 

@@ -48,12 +48,12 @@ def sim2(W1, W2, X):
     beta = 5
     X1 = np.insert(X, 0, -1)
     U1 = np.dot(W1.T, X1)
-    Y1 = 1 / (1 + np.exp(-beta * U1)) # My chyba tutaj powinniśmy kulturalnie używać sigmoid
-    # Y1 = relu(U1)
+    Y1 = 1 / (1 + np.exp(-beta * U1)) # używamy funkcji aktywacji ReLU dla warstwy ukrytej
+    # Y1 = np.maximum(0, U1)
     X2 = np.insert(Y1, 0, -1)
     U2 = np.dot(W2.T, X2)
-    Y2 = 1 / (1 + np.exp(-beta * U2))
-    # Y2 = relu(U2)
+    # Y2 = 1 / (1 + np.exp(-beta * U2)) # używamy funkcji aktywacji softmax dla warstwy wyjściowej
+    Y2 = np.exp(U2) / np.sum(np.exp(U2))
     return Y1, Y2
 
 
@@ -63,7 +63,9 @@ def train2(W1before, W2before, P, T, n):
     W2 = W2before.copy()
     lr = 0.1
     beta = 5
-
+    CE_list = []
+    W1_list = []
+    W2_list = []
     for i in range(n):
         exampleNo = np.random.randint(1, noExamples + 1)  # draw a random example number
         X = P[:, exampleNo - 1]  # present the chosen example and calculate output
@@ -82,55 +84,12 @@ def train2(W1before, W2before, P, T, n):
         W1 += dW1  # add adjustments to weights in both layers
         W2 += dW2
 
-    W1after = W1
-    W2after = W2
-
-    return W1after, W2after
-
-
-def train3(W1before, W2before, P, T, n):
-    noExamples = P.shape[1]
-    W1 = W1before.copy()
-    W2 = W2before.copy()
-    lr = 0.1
-    beta = 5
-    epsilon = 1e-8  # small constant to share
-    CE_list = []
-
-    # Matrix initialization for storing gradient squares
-    square_gradients_W1 = np.zeros_like(W1)
-    square_gradients_W2 = np.zeros_like(W2)
-
-    for i in range(n):
-        exampleNo = np.random.randint(1, noExamples + 1)  # draw a random example number
-        X = P[:, exampleNo - 1]  # present the chosen example and calculate output
-        X1 = np.insert(X, 0, -1)
-        Y1, Y2 = sim2(W1, W2, X)
-        X2 = np.insert(Y1, 0, -1)
-        D2 = T[exampleNo - 1] - Y2
-
-        E2 = beta * D2 * Y2 * (1 - Y2)  # "internal" error for layer 2
-        D1 = np.dot(W2[1:, :], E2)  # calculate errors for layer 1 (backpropagation)
-        E1 = beta * D1 * Y1 * (1 - Y1)  # "internal" error for layer 1
-
-        # Calculation of gradient squares
-        square_gradients_W1 += np.outer(X1, E1)**2
-        square_gradients_W2 += np.outer(X2, E2)**2
-
-        # Adaptacyjny współczynnik uczenia
-        adjusted_learning_rate_W1 = lr / (np.sqrt(square_gradients_W1) + epsilon)
-        adjusted_learning_rate_W2 = lr / (np.sqrt(square_gradients_W2) + epsilon)
-
-        # calculate weight adjustments for layers 1 & 2
-        dW1 = adjusted_learning_rate_W1 * np.outer(X1, E1)
-        dW2 = adjusted_learning_rate_W2 * np.outer(X2, E2)
-
         # obliczanie błędu klasyfikacji dla całego zbioru uczącego
         # tworzymy puste listy do przechowywania wyjść sieci dla każdego wektora wejściowego
         Y1_all = []
         Y2_all = []
         # iterujemy po każdym wektorze wejściowym i obliczamy wyjście sieci dla niego
-        if n%10 == 0:
+        if n % 50 == 0:
             for j in range(noExamples):
                 X = P[:, j]
                 Y1, Y2 = sim2(W1, W2, X)
@@ -153,14 +112,75 @@ def train3(W1before, W2before, P, T, n):
             # dodajemy błąd do listy
             CE_list.append(CE / len(T) * 100)
 
-        # # add adjustments to weights in both layers
+        W1 += dW1  # add adjustments to weights in both layers
+        W2 += dW2
+
+        W1_list.append(W1[0][0])
+        W2_list.append(W2[0][0])
+
+    W1after = W1
+    W2after = W2
+
+
+    return W1after, W2after, CE_list, W1_list, W2_list
+
+
+def train3(W1before, W2before, P, T, n):
+    noExamples = P.shape[1]
+    W1 = W1before.copy()
+    W2 = W2before.copy()
+    lr = 0.1
+    beta = 5
+    epsilon = 1e-8  # small constant to share
+    CE_list = []
+    W1_list = []
+    W2_list = []
+
+    # Matrix initialization for storing gradient squares
+    square_gradients_W1 = np.zeros_like(W1)
+    square_gradients_W2 = np.zeros_like(W2)
+
+    for i in range(n):
+        exampleNo = np.random.randint(1, noExamples + 1)
+        X = P[:, exampleNo - 1]
+        X1 = np.insert(X, 0, -1)
+        Y1, Y2 = sim2(W1, W2, X)
+        X2 = np.insert(Y1, 0, -1)
+        D2 = T[exampleNo - 1] - Y2
+
+        E2 = beta * D2 * Y2 * (1 - Y2)
+        D1 = np.dot(W2[1:, :], E2)
+        E1 = beta * D1 * Y1 * (1 - Y1)
+
+        # Calculation of gradient squares
+        square_gradients_W1 += np.outer(X1, E1) ** 2
+        square_gradients_W2 += np.outer(X2, E2) ** 2
+
+        # Adaptacyjny współczynnik uczenia
+        adjusted_learning_rate_W1 = lr / (np.sqrt(square_gradients_W1) + epsilon)
+        adjusted_learning_rate_W2 = lr / (np.sqrt(square_gradients_W2) + epsilon)
+
+        # calculate weight adjustments for layers 1 & 2
+        dW1 = adjusted_learning_rate_W1 * np.outer(X1, E1)
+        dW2 = adjusted_learning_rate_W2 * np.outer(X2, E2)
+
+        # obliczanie błędu klasyfikacji dla całego zbioru uczącego
+        if i % 10 == 0:
+            Y2_all = np.array([sim2(W1, W2, P[:, j])[1] for j in range(noExamples)])
+            Y2_pred = np.eye(3)[np.argmax(Y2_all, axis=1)]
+            CE = np.sum(Y2_pred != T)
+            CE_list.append(CE / (len(T) * len(T[0])) * 100)
+
+        W1_list.append(W1.copy())
+        W2_list.append(W2.copy())
+
         W1 += dW1
         W2 += dW2
 
     W1after = W1
     W2after = W2
 
-    return W1after, W2after, CE_list
+    return W1after, W2after, CE_list, W1_list, W2_list
 
 # TODO Połączyć wszystkie plotujące train2 w jedno
 # TODO Zrobić fajne wykresy dla różnych stylów trenowania - to co ty roibłeś zaimplementować tutaj, ale to na sam koniec
@@ -195,7 +215,8 @@ def train2_with_CE(W1before, W2before, P, T, n):
         Y1_all = []
         Y2_all = []
         # iterujemy po każdym wektorze wejściowym i obliczamy wyjście sieci dla niego
-        if n%50 == 0:
+
+        if n % 50 == 0:
             for j in range(noExamples):
                 X = P[:, j]
                 Y1, Y2 = sim2(W1, W2, X)
@@ -205,18 +226,19 @@ def train2_with_CE(W1before, W2before, P, T, n):
             # konwertujemy listy na tablice numpy
             Y2_all = np.array(Y2_all)
             # zakładamy, że jeśli wyjście sieci jest większe niż 0.5, to sieć przewiduje klasę 1, a jeśli jest mniejsze, to sieć przewiduje klasę 0
-            Y2_pred = np.where(Y2_all > 0.5, 1, 0)
+            Y2_pred = np.eye(3)[np.argmax(Y2_all, axis=1)]
             # porównujemy przewidywania sieci z wartościami oczekiwanymi i liczymy liczbę błędów
             CE = 0
-            '''
+
             for i in range(len(T)):
-                if Y2_pred[i][0] != T[i]:
-                    CE += 1
-            '''
-            CE = np.sum(np.abs(Y2_pred.flatten() - T))
+                for j in range(len(T[0])):
+                    if Y2_pred[i][j] != T[i][j]:
+                        CE += 1
+
+            # CE = np.sum(np.abs(Y2_pred - T))
             # CE = np.sum(np.abs(Y2_pred.T - T))
             # dodajemy błąd do listy
-            CE_list.append( CE/len(T) * 100)
+            CE_list.append( CE/(len(T) * len(T[0])) * 100)
 
         W1 += dW1  # add adjustments to weights in both layers
         W2 += dW2
