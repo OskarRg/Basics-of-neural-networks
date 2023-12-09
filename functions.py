@@ -5,10 +5,6 @@ def sigmoid(x, beta=1):
     return 1 / (1 + np.exp(-beta * x))
 
 
-def relu(x):  # Nw czy dobrze - psrawdze kiedyś
-    return np.maximum(0, x)
-
-
 def init2(S, K1, K2):
     # funkcja tworzy sieć jednowarstwową
     # i wypełnia jej macierz wag wartościami losowymi
@@ -19,23 +15,6 @@ def init2(S, K1, K2):
     W1 = np.random.uniform(-0.1, 0.1, (S + 1, K1))
     W2 = np.random.uniform(-0.1, 0.1, (K1 + 1, K2))
     return W1, W2
-
-
-def init_weights(S, *K):
-    # funkcja tworzy sieć wielowarstwową
-    # i wypełnia jej macierze wag wartościami losowymi
-    # z zakresu od -0.1 do 0.1
-    # parametry: S - liczba wejść do sieci
-    # *K - liczba neuronów w każdej warstwie (można przekazać dowolną ilość argumentów)
-    # wynik: lista macierzy wag sieci
-    num_layers = len(K)
-    weights = [np.random.uniform(-0.1, 0.1, (S + 1, K[0]))]
-
-    for i in range( num_layers - 1):
-        W = np.random.uniform(-0.1, 0.1, (K[i] + 1, K[i + 1]))
-        weights.append(W)
-        # print('i ', i, weights[0])
-    return weights
 
 
 def sim2(W1, W2, X):
@@ -55,6 +34,76 @@ def sim2(W1, W2, X):
     # Y2 = 1 / (1 + np.exp(-beta * U2)) # używamy funkcji aktywacji softmax dla warstwy wyjściowej
     Y2 = np.exp(U2) / np.sum(np.exp(U2))
     return Y1, Y2
+
+
+def train_with_momentum(W1before, W2before, P, T, n, MSE_threshold=0.01):
+    noExamples = P.shape[1]
+    W1 = W1before.copy()
+    W2 = W2before.copy()
+    lr = 0.1
+    beta = 5
+    CE_list = []
+    W1_list = []
+    W2_list = []
+    # Inicjalizacja list dla przechowywania wartości błędu MSE
+    MSE1_list = []
+    MSE2_list = []
+    window_size = 150  # przykładowa wartość, można ją zmienić według potrzeb
+    # Definicja współczynnika momentum
+    wspMomentum = 0.7 # przykładowa wartość, można ją zmienić według potrzeb
+    # Inicjalizacja poprawek wag dla warstw 1 i 2
+    dW1 = 0 # poprawka wag warstwy 1
+    dW2 = 0 # poprawka wag warstwy 2
+    for i in range(n):
+        exampleNo = np.random.randint(1, noExamples + 1)
+        X = P[:, exampleNo - 1]
+        X1 = np.insert(X, 0, -1)
+        Y1, Y2 = sim2(W1, W2, X)
+        X2 = np.insert(Y1, 0, -1)
+        D2 = T[exampleNo - 1] - Y2
+
+        E2 = beta * D2 * Y2 * (1 - Y2)
+        D1 = np.dot(W2[1:, :], E2)
+        E1 = beta * D1 * Y1 * (1 - Y1)
+
+        # Obliczanie błędu MSE dla warstwy ukrytej i wyjściowej
+        MSE1 = np.mean(E1 ** 2)
+        MSE2 = np.mean(E2 ** 2)
+
+        # Dodawanie wartości błędu MSE do list
+        MSE1_list.append(MSE1)
+        MSE2_list.append(MSE2)
+
+        MSE2_avg = np.mean(MSE2_list[-window_size:])
+
+        # Sprawdzanie, czy średnia wartość błędu MSE jest mniejsza lub równa progu
+        if MSE2_avg <= MSE_threshold:
+            print(f"siemanko n: {i}")
+            break  # zakończenie pętli uczenia
+
+
+        dW1 = lr * np.outer(X1, E1) + wspMomentum * dW1  # calculate weight adjustments for layers 1 & 2 with momentum
+        dW2 = lr * np.outer(X2, E2) + wspMomentum * dW2  # calculate weight adjustments for layers 2 & 2 with momentum
+
+        # obliczanie błędu klasyfikacji dla całego zbioru uczącego
+        if i % 1 == 0:
+            Y2_all = np.array([sim2(W1, W2, P[:, j])[1] for j in range(noExamples)])
+            Y2_pred = np.eye(len(T[0]))[np.argmax(Y2_all, axis=1)]
+            CE = np.sum(Y2_pred != T)
+            CE_list.append(CE / (len(T) * len(T[0])) * 100)
+
+        W1_list.append(W1.copy())
+        W2_list.append(W2.copy())
+
+        W1 += dW1
+        W2 += dW2
+
+    W1after = W1
+    W2after = W2
+
+    return W1after, W2after, CE_list, W1_list, W2_list, MSE1_list, MSE2_list
+
+
 
 
 def train2(W1before, W2before, P, T, n):
@@ -135,7 +184,9 @@ def train3(W1before, W2before, P, T, n):
     CE_list = []
     W1_list = []
     W2_list = []
-
+    # Inicjalizacja list dla przechowywania wartości błędu MSE
+    MSE1_list = []
+    MSE2_list = []
     # Matrix initialization for storing gradient squares
     square_gradients_W1 = np.zeros_like(W1)
     square_gradients_W2 = np.zeros_like(W2)
@@ -181,6 +232,8 @@ def train3(W1before, W2before, P, T, n):
     W2after = W2
 
     return W1after, W2after, CE_list, W1_list, W2_list
+
+
 
 # TODO Połączyć wszystkie plotujące train2 w jedno
 # TODO Zrobić fajne wykresy dla różnych stylów trenowania - to co ty roibłeś zaimplementować tutaj, ale to na sam koniec

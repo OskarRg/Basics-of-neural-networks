@@ -1,13 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from functions import sigmoid, init2, sim2, train2, train2_with_CE as trainCE, train3 as train3_with_CE
+from two_layer_functions import sigmoid, init2, sim2, train4, train4_with_stop
+from functions import train_with_momentum
 from data_preparation_two_layers import y as T, X as P
-
-# TODO Zrobić wykresy MSE - wag - już wiem jak - raczej proste ❌
+# TODO Zrobić wykresy MSE - wag - już wiem jak - raczej proste ❌ XDDDDDD - NIE BYŁO PROSTE 09.12 01:22
 # TODO Momentum ❌ - jest na prezentacji ewentualnie o tym mowa i w KSIĄŻCE
 # TODO Zminny rozmiar kroku uczenia - ✔ (?) - jeszcze nie wiem jak działa i te adaptacyjne też
 # TODO Wykres błędu klasyfikacji - ✔ - trzeba połączyć train_with w jedność jak będą wszystkie 3 (tak, żeby pętle się nie łączyły - 1 wystarczy)
-# TODO Opcja szybszego kończenia uczenia ❌ - po porstu jeden if mądrze umieszczony(?) sprawdzjący Error - nie wiem jaka wartość errora byłaby dobra
+# TODO Opcja szybszego kończenia uczenia ✔ - po porstu jeden if mądrze umieszczony(?) sprawdzjący Error - nie wiem jaka wartość errora byłaby dobra TEŻ NIE BYŁO PROSTE
 # TODO Opis problemu, danych uczących, Obserwacje.
 # TODO Zapytać o:
 # ❔Czy błąd klasyfikacji musi zejść do 0 (nam schodzi do maksymalnie 5% nawet przy 20000 obiegach nie ważne ile danych)
@@ -15,23 +15,27 @@ from data_preparation_two_layers import y as T, X as P
 # ❔❔
 # ❗Ja się zajmę teraz Wykresami aby ładnie je połączyć w jedność,
 # ❗zrobić wogle wszystkie 3 typy bo na razie jest 1, na razie jest syf straszny
-# ❗❗❗ NA RAZIE UŻYWAM ZBIORU IRIS.DATA ŻEBY ŁĄDNIE WIDZIEĆ JAK DZIAŁA I WYKRESY SĄ SZYBKIE❗❗❗
-
 
 def plot_everything(): # zrobimy na ładne kiedyś
+    lista_wartosci = np.linspace(0, len(CE_error) - 1, len(mse_layer1), dtype=int)
+
     plt.figure()
-    plt.plot(MSE1_list, label='MSE na przykładach uczących')
+    plt.plot(lista_wartosci, mse_layer1, label='MSE na przykładach uczących')
     plt.xlabel('Numer iteracji')
     plt.ylabel('Błąd MSE')
     plt.title('Błąd MSE dla warstwy 1')
+
     plt.legend()
     plt.show()
 
     # rysowanie wykresów błędu MSE dla warstwy 2
     plt.figure()
-    plt.plot(MSE2_list, label='MSE na przykładach uczących')
-    plt.plot(MSE2_total, label='MSE na całym zbiorze uczącym')
-    plt.xlabel('Numer iteracji')
+
+    plt.plot(lista_wartosci, mse_layer2, label='MSE na przykładach uczących')
+    plt.plot(lista_wartosci, mse2_total_error, label='MSE na całym zbiorze uczącym')
+    # Określenie kroku na osi X
+
+    plt.xlabel('Epoka')
     plt.ylabel('Błąd MSE')
     plt.title('Błąd MSE dla warstwy 2')
     plt.legend()
@@ -45,7 +49,7 @@ def plot_CE():
     plt.xlabel('Numer iteracji')
     plt.ylabel('Błąd klasyfikacji')
     plt.title('Błąd klasyfikacji na całym ciągu uczącym')
-    # plt.ylim(0, 20)
+    #plt.ylim(0, 10)
     plt.legend()
     plt.show()
 
@@ -76,21 +80,46 @@ def plot_weights(W1_list, W2_list):
     plt.show()
 
 
+def plot_mse():
+    '''
+    x_values = range(len(MSE2_error))
+    # Rysowanie wykresu błędu MSE dla warstwy ukrytej
+    plt.scatter(x_values, MSE1_error, label='MSE1', s=1)
+    plt.xlabel('Iteration')
+    plt.ylabel('MSE')
+    plt.title('MSE error for hidden layer')
+
+    #plt.ylim(0, 0.1)
+    plt.legend()
+    plt.show()
+    '''
+    # Rysowanie wykresu błędu MSE dla warstwy wyjściowej
+    plt.plot(mse2_total_error, label='MSE2')
+    plt.xlabel('Iteration')
+    plt.ylabel('MSE')
+    plt.title('MSE error for output layer')
+    #plt.ylim(0, 0.1)
+    plt.legend()
+    plt.show()
+
+
 if __name__ == '__main__':
-    n = 10000
+    n = 2000
     e = 0.05  # error ten do tego wcześniejszego kończenia, nie wiem jaki nam wystarczy
     MSE1_list, MSE2_list, MSE2_total = [[], [], []]
     '''
     # To przykład z otyłością, też działa taki malutki
     P = np.array([[0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1],
                   [.55, .5, .65, .50, .75, .75, 0.9, .70, .72, .68, 0.74, 1.20]])
-    T = np.array([0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1])
+    T = np.array([[0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1],
+                  [1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0]])
+    T = T.T              
     '''
 
     Y_before_list = []
     Y_after_list = []
     #W1before, W2before = init2(2, 3, 1)
-    W = init2(4, 5, 3)  # Duża liczba chyba pozwala uniknąć najgorszych przypadków, ale nie pomaga jakoś bardzo
+    W = init2(4, 12, 3)  # Duża liczba chyba pozwala uniknąć najgorszych przypadków, ale nie pomaga jakoś bardzo
 
     print("W1 size =", len(W[0]))
     print("W2 size =", len(W[1]))
@@ -101,15 +130,16 @@ if __name__ == '__main__':
     W_after = [0, 0]
     # W_after[0], W_after[1] = train2(W[0], W[1], P, T, n)
     # W_after[0], W_after[1], MSE1_list, MSE2_list, MSE1_total, MSE2_total = train2(W[0], W[1], P, T, n)
-    W_after[0], W_after[1], CE_error, W1_list, W2_list = train3_with_CE(W[0], W[1], P, T, n)
+    W_after[0], W_after[1], CE_error, mse2_total_error, mse_layer1, mse_layer2 = train4_with_stop(W[0], W[1], P, T, n, 0.005)
 
     for column in range(P.shape[1]):
         Y2 = sim2(W_after[0], W_after[1], P[:, column])
         Y_after_list.append(Y2[1])
 
     plot_CE()
-    plot_weights(W1_list, W2_list)
-
+    #plot_weights(W1_list, W2_list)
+    # plot_mse()
+    plot_everything()
     ninety = []
     bad_output = 0
     good_output = 0

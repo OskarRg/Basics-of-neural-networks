@@ -2,8 +2,22 @@ import pandas as pd
 import numpy as np
 from scipy.stats import chi2_contingency
 from sklearn.model_selection import train_test_split
-from tensorflow.keras.utils import to_categorical
 # Wczytujemy plik csv do obiektu DataFrame
+
+
+def to_categorical(y):
+    unique_classes = list(set(y))
+    class_mapping = {cls: i for i, cls in enumerate(unique_classes)}
+
+    encoded_y = []
+    for label in y:
+        encoded_label = [0] * len(unique_classes)
+        encoded_label[class_mapping[label]] = 1
+        encoded_y.append(encoded_label)
+
+    return encoded_y, class_mapping
+
+
 '''
 df = pd.read_csv("Salary.csv", sep=',')
 
@@ -31,6 +45,7 @@ y = np.where(y >= 55000, 1, 0)
 print("Kształt y:", y.shape)
 print("Kształt X:", X.shape)
 '''
+
 # ----------------------------------- IRYS DATA ----------------------------------------------
 
 df = pd.read_csv("iris.data", sep=',')
@@ -41,14 +56,14 @@ y = df["classi"]
 X = df[["sepal length", "sepal width", "petal length", "petal width"]]
 
 # Podział danych na treningowe i na te, co użyjemy do sprawdzenia i testowania w proporcjach 70 15 15
-X_train, X_unused, y_train, y_unused = train_test_split(X, y, test_size=0.3, random_state=42)
+X_train, X_unused, y_train, y_unused = train_test_split(X, y, test_size=0.1, random_state=42)
 
 # Zakoduj etykiety klas w postaci one-hot encoding
-y_train_encoded = to_categorical(y_train.map({"Iris-setosa": 0, "Iris-virginica": 1, "Iris-versicolor": 2}))
+y_train_encoded, class_mapping = to_categorical(y_train.map({"Iris-setosa": 0, "Iris-virginica": 1, "Iris-versicolor": 2}))
 
 # Przekształć dane do postaci, która może być użyta w treningu modelu
 y = y_train_encoded
 X = X_train.values.T
 
-print("Kształt y:", y.shape)
-print("Kształt X:", X.shape)
+#print("Kształt y:", y.shape)
+#print("Kształt X:", X.shape)
