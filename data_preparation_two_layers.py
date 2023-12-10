@@ -1,7 +1,10 @@
+import random
+
 import pandas as pd
 import numpy as np
 from scipy.stats import chi2_contingency
 from sklearn.model_selection import train_test_split
+from sklearn.utils import shuffle
 # Wczytujemy plik csv do obiektu DataFrame
 
 
@@ -56,8 +59,8 @@ y = df["classi"]
 X = df[["sepal length", "sepal width", "petal length", "petal width"]]
 
 # Podział danych na treningowe i na te, co użyjemy do sprawdzenia i testowania w proporcjach 70 15 15
-X_train, X_unused, y_train, y_unused = train_test_split(X, y, test_size=0.1, random_state=42)
-
+# X_train, X_unused, y_train, y_unused = train_test_split(X, y, test_size=0.1, random_state=random.randint(1, 42))
+X_train, y_train = shuffle(X, y, random_state=56)
 # Zakoduj etykiety klas w postaci one-hot encoding
 y_train_encoded, class_mapping = to_categorical(y_train.map({"Iris-setosa": 0, "Iris-virginica": 1, "Iris-versicolor": 2}))
 
