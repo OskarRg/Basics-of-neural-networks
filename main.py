@@ -33,7 +33,7 @@ if __name__ == '__main__':
 
     bad_output = 0
     good_output = 0
-
+    dick = {0:"Iris-setosa", 1:"Iris-versicolor", 2:"Iris-virginica"}
     for i in range(P.shape[1]):
         X = P[:, i]
         R = T[i]
@@ -44,6 +44,9 @@ if __name__ == '__main__':
 
         if predicted_class != true_class:
             bad_output += 1
+
+            print(f"Predicted class: {dick[predicted_class]}, example: {X}")
+            print(f"True class: {dick[true_class]}")
         else:
             good_output += 1
 

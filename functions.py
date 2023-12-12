@@ -23,8 +23,7 @@ def sim2(W1, W2, X):
     return Y1, Y2
 
 
-def train_with_stop_without_adaptive(W1before, W2before, P, T, num_epochs, desired_error):
-    batch_size = 16
+def train_with_stop_without_adaptive(W1before, W2before, P, T, num_epochs, desired_error, batch_size=16):
     noExamples = P.shape[1]
     W1 = W1before.copy()
     W2 = W2before.copy()
@@ -113,8 +112,7 @@ def train_with_stop_without_adaptive(W1before, W2before, P, T, num_epochs, desir
     return W1after, W2after, classification_errors, mse_total_errors, mse_layer1_list, mse_layer2_list, W1_values, W2_values, epoch
 
 
-def train_with_adaptive_without_momentum(W1before, W2before, P, T, num_epochs, desired_error):
-    batch_size = 16
+def train_with_adaptive_without_momentum(W1before, W2before, P, T, num_epochs, desired_error, batch_size=16):
     noExamples = P.shape[1]
     W1 = W1before.copy()
     W2 = W2before.copy()
@@ -164,7 +162,7 @@ def train_with_adaptive_without_momentum(W1before, W2before, P, T, num_epochs, d
             D2_check = D2_squared_sum / mini_batch_X.shape[1]
             D2_squared_sum = 0
 
-            if D2_check > (1.05 * D2_prev) and 0.7 * lr >= 0.15:
+            if D2_check > (1.04 * D2_prev) and 0.7 * lr >= 0.15:
                 lr = 0.7 * lr
             else:
                 lr = 1.05 * lr
@@ -215,8 +213,7 @@ def train_with_adaptive_without_momentum(W1before, W2before, P, T, num_epochs, d
     return W1after, W2after, classification_errors, mse_total_errors, mse_layer1_list, mse_layer2_list, W1_values, W2_values, epoch
 
 
-def train_with_adaptive_with_momentum(W1before, W2before, P, T, num_epochs, desired_error):
-    batch_size = 16
+def train_with_adaptive_with_momentum(W1before, W2before, P, T, num_epochs, desired_error, batch_size=16):
     noExamples = P.shape[1]
     W1 = W1before.copy()
     W2 = W2before.copy()
@@ -248,6 +245,7 @@ def train_with_adaptive_with_momentum(W1before, W2before, P, T, num_epochs, desi
             mini_batch_T = T_train[i:i + batch_size]
 
             for j in range(mini_batch_X.shape[1]):
+
                 X = mini_batch_X[:, j]
                 X1 = np.insert(X, 0, -1)
                 Y1, Y2 = sim2(W1, W2, X)
@@ -270,7 +268,7 @@ def train_with_adaptive_with_momentum(W1before, W2before, P, T, num_epochs, desi
             D2_check = D2_squared / mini_batch_X.shape[1]
             D2_squared = 0
 
-            if D2_check > (1.05 * D2_prev) and 0.7 * lr >= 0.15:
+            if D2_check > (1.04 * D2_prev) and 0.7 * lr >= 0.15:
                 lr = 0.7 * lr
             else:
                 lr = 1.05 * lr
@@ -292,9 +290,9 @@ def train_with_adaptive_with_momentum(W1before, W2before, P, T, num_epochs, desi
             E2 = D2 * Y2 * (1 - Y2)
             D1 = np.dot(W2[1:, :], E2)
 
-            mse_total_temp.append(np.mean(np.power(D2, 2)))
-            mse_layer1 = (np.mean(np.power(D1, 2)))
-            mse_layer2 = (np.mean(np.power(D2, 2)))
+            mse_total_temp.append(np.mean(np.power(D2, 2))/2)
+            mse_layer1 = (np.mean(np.power(D1, 2)))/2
+            mse_layer2 = (np.mean(np.power(D2, 2)))/2
             mse_layer1_rand.append(mse_layer1)
             mse_layer2_rand.append(mse_layer2)
             Y_all.append(Y2)

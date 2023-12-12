@@ -23,7 +23,7 @@ y = df["classi"]
 
 X = df[["sepal length", "sepal width", "petal length", "petal width"]]
 
-X_train, y_train = shuffle(X, y, random_state=56)
+X_train, y_train = shuffle(X, y, random_state=51)
 y_train_encoded, class_mapping = to_categorical(
     y_train.map({"Iris-setosa": 0, "Iris-virginica": 1, "Iris-versicolor": 2}))
 
