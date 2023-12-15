@@ -102,7 +102,7 @@ def train_with_stop_without_adaptive(W1before, W2before, P, T, num_epochs, desir
             classification_error = incorrect_predictions / num * 100
             classification_errors.append(classification_error)
 
-        if np.mean(mse_total_errors[-10:]) < desired_error:
+        if np.mean(mse_total_errors[-50:]) < desired_error:
             print(f"Training stopped after {epoch + 1} epochs. Desired error reached.")
             break
 
@@ -117,7 +117,7 @@ def train_with_adaptive_without_momentum(W1before, W2before, P, T, num_epochs, d
     W1 = W1before.copy()
     W2 = W2before.copy()
     lr = 0.1
-
+    beta = 2
     classification_errors = []
     mse_total_errors = []
     mse_layer1_list = []
@@ -146,9 +146,9 @@ def train_with_adaptive_without_momentum(W1before, W2before, P, T, num_epochs, d
                 Y1, Y2 = sim2(W1, W2, X)
                 X2 = np.insert(Y1, 0, -1)
                 D2 = mini_batch_T[j] - Y2
-                E2 = D2 * Y2 * (1 - Y2)
+                E2 = beta * D2 * Y2 * (1 - Y2)
                 D1 = np.dot(W2[1:, :], E2)
-                E1 = D1 * Y1 * (1 - Y1)
+                E1 = beta * D1 * Y1 * (1 - Y1)
                 dW1 = lr * np.outer(X1, E1)
                 dW2 = lr * np.outer(X2, E2)
                 dW1_sum += dW1
@@ -162,14 +162,15 @@ def train_with_adaptive_without_momentum(W1before, W2before, P, T, num_epochs, d
             D2_check = D2_squared_sum / mini_batch_X.shape[1]
             D2_squared_sum = 0
 
-            if D2_check > (1.04 * D2_prev) and 0.7 * lr >= 0.15:
-                lr = 0.7 * lr
-            else:
-                lr = 1.05 * lr
-            D2_prev = D2_check
+
             W1_values.append(W1.copy())
             W2_values.append(W2.copy())
 
+        if D2_check > (1.04 * D2_prev) and 0.7 * lr >= 0.15:
+            lr = 0.7 * lr
+        else:
+            lr = 1.05 * lr
+        D2_prev = D2_check
         # -------- MAKING PLOTS - WITH TESTING DATA --------
         Y_all = []
         mse_total_temp = []
@@ -181,7 +182,7 @@ def train_with_adaptive_without_momentum(W1before, W2before, P, T, num_epochs, d
             Y1, Y2 = sim2(W1, W2, X)
 
             D2 = (T[p] - Y2)
-            E2 = D2 * Y2 * (1 - Y2)
+            E2 = beta * D2 * Y2 * (1 - Y2)
             D1 = np.dot(W2[1:, :], E2)
 
             mse_total_temp.append(np.mean(np.power(D2, 2)))
@@ -203,7 +204,7 @@ def train_with_adaptive_without_momentum(W1before, W2before, P, T, num_epochs, d
         classification_error = incorrect_predictions / num * 100
         classification_errors.append(classification_error)
 
-        if np.mean(mse_total_errors[-10:]) < desired_error:
+        if np.mean(mse_total_errors[-50:]) < desired_error:
             print(f"Training stopped after {epoch + 1} epochs. Desired error reached.")
             break
 
@@ -218,6 +219,7 @@ def train_with_adaptive_with_momentum(W1before, W2before, P, T, num_epochs, desi
     W1 = W1before.copy()
     W2 = W2before.copy()
     lr = 0.1
+    beta = 1
     momentum = 0.9
     momentum_off = 0.01
     classification_errors = []
@@ -251,9 +253,9 @@ def train_with_adaptive_with_momentum(W1before, W2before, P, T, num_epochs, desi
                 Y1, Y2 = sim2(W1, W2, X)
                 X2 = np.insert(Y1, 0, -1)
                 D2 = mini_batch_T[j] - Y2
-                E2 = D2 * Y2 * (1 - Y2)
+                E2 = beta * D2 * Y2 * (1 - Y2)
                 D1 = np.dot(W2[1:, :], E2)
-                E1 = D1 * Y1 * (1 - Y1)
+                E1 = beta * D1 * Y1 * (1 - Y1)
                 dW1 = lr * np.outer(X1, E1) + momentum * dW1_prev
                 dW2 = lr * np.outer(X2, E2) + momentum * dW2_prev
                 dW1_prev = dW1
@@ -268,14 +270,15 @@ def train_with_adaptive_with_momentum(W1before, W2before, P, T, num_epochs, desi
             D2_check = D2_squared / mini_batch_X.shape[1]
             D2_squared = 0
 
-            if D2_check > (1.04 * D2_prev) and 0.7 * lr >= 0.15:
-                lr = 0.7 * lr
-            else:
-                lr = 1.05 * lr
-            D2_prev = D2_check
+
             W1_values.append(W1.copy())
             W2_values.append(W2.copy())
-
+        if D2_check > (1.04 * D2_prev) and 0.7 * lr >= 0.15:
+            lr = 0.7 * lr
+        else:
+            lr = 1.05 * lr
+        D2_prev = D2_check
+        momentum = 1 - lr
         # -------- MAKING PLOTS - WITH TESTING DATA --------
         Y_all = []
         mse_total_temp = []
@@ -313,7 +316,7 @@ def train_with_adaptive_with_momentum(W1before, W2before, P, T, num_epochs, desi
                 dW1_prev = 0
                 dW2_prev = 0
 
-        if np.mean(mse_total_errors[-10:]) < desired_error:
+        if np.mean(mse_total_errors[-50:]) < desired_error:
             print(f"Training stopped after {epoch + 1} epochs. Desired error reached.")
             break
 

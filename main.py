@@ -6,7 +6,7 @@ from plot_functions import plot_everything, plot_mse, plot_weights, plot_CE
 
 if __name__ == '__main__':
     n = 5000
-    e = 0.001
+    e = 0.01
     MSE1_list, MSE2_list, MSE2_total = [[], [], []]
 
     Y_before_list = []
@@ -49,7 +49,7 @@ if __name__ == '__main__':
             print(f"True class: {dick[true_class]}")
         else:
             good_output += 1
-
+    print(Y2.shape)
     print("Bad: ", bad_output)
     print("Good: ", good_output)
     print("It went good {}% of the time".format(int(good_output / (good_output + bad_output) * 100)))
