@@ -33,7 +33,7 @@ if __name__ == '__main__':
 
     bad_output = 0
     good_output = 0
-    dick = {0:"Iris-setosa", 1:"Iris-versicolor", 2:"Iris-virginica"}
+    dic = {0:"Iris-setosa", 1:"Iris-versicolor", 2:"Iris-virginica"}
     for i in range(P.shape[1]):
         X = P[:, i]
         R = T[i]
