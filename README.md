@@ -1,4 +1,4 @@
-<h1 align="center">🧬Two Layers Neural Network🧬</h1>
+<h1 align="center">🧬Two Layer Neural Network🧬</h1>
 <h2 align="center">Simple neural network created for solving non-linear classification problem.</h2>
 
 <h3 align="center">Network was build using only NumPy arrays.</h3>
