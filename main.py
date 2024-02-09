@@ -3,8 +3,7 @@ from functions import init2, sim2, train_with_stop_without_adaptive, train_with_
 from data_preparation import y as T, X as P
 from plot_functions import plot_everything, plot_mse, plot_weights, plot_CE
 
-
-if __name__ == '__main__':
+def main():
     n = 5000
     e = 0.01
     MSE1_list, MSE2_list, MSE2_total = [[], [], []]
@@ -53,3 +52,6 @@ if __name__ == '__main__':
     print("Bad: ", bad_output)
     print("Good: ", good_output)
     print("It went good {}% of the time".format(int(good_output / (good_output + bad_output) * 100)))
+
+if __name__ == '__main__':
+    main()
